@@ -9,19 +9,23 @@
 #include "glibr.h"
 
 OLEDDisplay oled( MBED_CONF_IOTKIT_OLED_RST, MBED_CONF_IOTKIT_OLED_SDA, MBED_CONF_IOTKIT_OLED_SCL );
+SPI spi( MBED_CONF_IOTKIT_LED_SPI_MOSI, NC, MBED_CONF_IOTKIT_LED_SPI_SCLK );
 
 char host[] = "http://api.thingspeak.com/update";
 char key[] = "2UA773WW6HBQ3PZ5";
-
+unsigned int strip[9];
 char message[1024];
-
-void updateOLED();
-void updateHost();
-
-WiFiInterface* network;
 char* color = "rot";
 char* slideSide = "rechts";
 float distanceFromSensor = 5.6;
+int gLED, rLED, bLED = 0;
+
+void updateOLED();
+void updateHost();
+void clearLED();
+void writeLED();
+
+WiFiInterface* network;
 
 glibr GSensor( D14, D15 );
 
@@ -117,28 +121,76 @@ int main()
             {
                 case DIR_UP:
                     oled.printf("UP   ");
+                    slideSide = "UP";
+                    gLED = 0;
+                    rLED = 32;
+                    bLED = 0;
                     break;
                 case DIR_DOWN:
-                    oled.printf("DOWN ");                    
+                    oled.printf("DOWN "); 
+                    slideSide = "DOWN"; 
+                    gLED = 32;
+                    rLED = 0;
+                    bLED = 0;                  
                     break;
                 case DIR_LEFT:
                     oled.printf("LEFT ");
+                    slideSide = "LEFT";
+                    gLED = 0;
+                    rLED = 0;
+                    bLED = 32;
                     break;
                 case DIR_RIGHT:
                     oled.printf("RIGHT");
+                    slideSide = "RIGHT";
+                    gLED = 0;
+                    rLED = 32;
+                    bLED = 0;
                     break;
                 case DIR_NEAR:
                     oled.printf("NEAR ");
+                    slideSide = "NEAR";
+                    gLED = 0;
+                    rLED = 32;
+                    bLED = 0;
                     break;
                 case DIR_FAR:
                     oled.printf("FAR  ");
+                    slideSide = "FAR";
+                    gLED = 0;
+                    rLED = 32;
+                    bLED = 0;
                     break;
                 default:
-                    oled.printf("NONE ");               
+                    oled.printf("NONE "); 
+                    slideSide = "NONE";   
+                    gLED = 0;
+                    rLED = 32;
+                    bLED = 0;           
                     break;
             }
         }
         thread_sleep_for( 10 );
+		// Gruen, Rot, Blau - von Dunkel bis Hell
+		for ( int i = 0; i < 128; i+=32 )
+		{
+				// LED 1
+				strip[0] = gLED;
+				strip[1] = rLED;
+				strip[2] = bLED;
+				// LED 2
+				strip[3] = gLED;
+				strip[4] = rLED;
+				strip[5] = bLED;
+				// LED 3
+				strip[6] = gLED;
+				strip[7] = rLED;
+				strip[8] = bLED;
+				writeLED();
+				thread_sleep_for( 100 );
+		}
+		thread_sleep_for( 1000 );
+		clearLED();
     }
 }
 
@@ -149,13 +201,13 @@ void updateOLED(){
     char timeString[10];
     std::strftime(timeString, sizeof(timeString), "%T", std::localtime(&time));
 
-    //printf("Time: %s, Color: %s, Distance: %f, Slide: %s\r\n", (char*) &timeString, color, distanceFromSensor, slideSide);
+    printf("Time: %s, Color: %s, Distance: %f, Slide: %s\r\n", (char*) &timeString, color, distanceFromSensor, slideSide);
 
     oled.clear();
     thread_sleep_for(30);
     oled.cursor(0, 0);
     thread_sleep_for(30);
-    //oled.printf("Time:  %s\ncolor:     %2.2s\ndistance:     %2.2f\nslide:     %5s", (char*) &timeString, color, distanceFromSensor, slideSide);
+    oled.printf("Time:  %s\ncolor:     %2.2s\ndistance:     %2.2f\nslide:     %5s", (char*) &timeString, color, distanceFromSensor, slideSide);
 }
 
 void updateHost(){
@@ -168,4 +220,19 @@ void updateHost(){
         printf("HttpPostRequest failed (error code %d)\n", request->get_error());
     }
     delete request;
+}
+
+void writeLED()
+{
+	for ( int p = 0; p < 9; p++ )
+		spi.write( strip[p] );
+}
+
+void clearLED()
+{
+	for ( int p = 0; p < 9; p++ )
+	{
+		strip[p] = 0;
+		spi.write( strip[p] );
+	}
 }
