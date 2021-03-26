@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="style.css">
+        <title>Sensorapp</title>
+    </head>
+
+    <body>
+        <div id="pagewrap">
+            <h1 class="header"> Sensorapp</h1>
+            <div id="flexwrapper">
+
+                <div class="box">
+                    <p>Color: <span id="color"></span></p>
+                    <p>SideSlide: <span id="sideSlide"></span></p>   
+                </div>
+            </div>
+        </div>
+        <script>
+            fetchlocaldata(); 
+            fetchremotedata();
+
+            async function fetchlocaldata(){
+                while(true){        
+                    await axios.get("/sensors")
+                    .then(res => {
+                        document.getElementById("color").innerHTML = res.data.color;
+                        document.getElementById("sideSlide").innerHTML = res.data.sideSlide;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        document.getElementById("color").innerHTML = "-";
+                        document.getElementById("sideSlide").innerHTML = "-";
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 5000))
+                }
+            }
+        
+        </script>
+    </body>
+</html>
