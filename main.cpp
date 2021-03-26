@@ -15,9 +15,8 @@ char host[] = "http://api.thingspeak.com/update";
 char key[] = "2UA773WW6HBQ3PZ5";
 unsigned int strip[9];
 char message[1024];
-char* color = "rot";
-char* slideSide = "rechts";
-float distanceFromSensor = 5.6;
+char* color;
+char* slideSide;
 int gLED, rLED, bLED = 0;
 
 void updateOLED();
@@ -115,58 +114,58 @@ int main()
         thread_sleep_for(30);
         if ( GSensor.isGestureAvailable() )
          {
-            oled.printf( "Gesture sensor " );
-            oled.cursor( 1, 0 );
-            switch ( GSensor.readGesture() ) 
+            //oled.printf( "Gesture sensor " );
+            oled.cursor( 0, 0 );
+            switch ( GSensor.readGesture() )
             {
                 case DIR_UP:
-                    oled.printf("UP   ");
                     slideSide = "UP";
-                    gLED = 0;
+                    color = "Rot";
                     rLED = 32;
+                    gLED = 0;
                     bLED = 0;
                     break;
-                case DIR_DOWN:
-                    oled.printf("DOWN "); 
-                    slideSide = "DOWN"; 
-                    gLED = 32;
+                case DIR_DOWN: 
+                    slideSide = "DOWN";
+                    color = "Gruen";
                     rLED = 0;
-                    bLED = 0;                  
+                    gLED = 32;
+                    bLED = 0;
                     break;
                 case DIR_LEFT:
-                    oled.printf("LEFT ");
                     slideSide = "LEFT";
-                    gLED = 0;
+                    color = "Blau";
                     rLED = 0;
+                    gLED = 0;
                     bLED = 32;
                     break;
                 case DIR_RIGHT:
-                    oled.printf("RIGHT");
                     slideSide = "RIGHT";
-                    gLED = 0;
-                    rLED = 32;
-                    bLED = 0;
+                    color = "Cyan";
+                    rLED = 0;
+                    gLED = 32;
+                    bLED = 32;
                     break;
                 case DIR_NEAR:
-                    oled.printf("NEAR ");
                     slideSide = "NEAR";
-                    gLED = 0;
+                    color = "Gelb";
                     rLED = 32;
+                    gLED = 32;
                     bLED = 0;
                     break;
                 case DIR_FAR:
-                    oled.printf("FAR  ");
                     slideSide = "FAR";
-                    gLED = 0;
+                    color = "Magenta";
                     rLED = 32;
-                    bLED = 0;
+                    gLED = 0;
+                    bLED = 32;
                     break;
                 default:
-                    oled.printf("NONE "); 
-                    slideSide = "NONE";   
-                    gLED = 0;
+                    slideSide = "NONE";
+                    color = "Weiss";
                     rLED = 32;
-                    bLED = 0;           
+                    gLED = 32;
+                    bLED = 32;
                     break;
             }
         }
@@ -175,16 +174,16 @@ int main()
 		for ( int i = 0; i < 128; i+=32 )
 		{
 				// LED 1
-				strip[0] = gLED;
-				strip[1] = rLED;
+				strip[0] = rLED;
+				strip[1] = gLED;
 				strip[2] = bLED;
 				// LED 2
-				strip[3] = gLED;
-				strip[4] = rLED;
+				strip[3] = rLED;
+				strip[4] = gLED;
 				strip[5] = bLED;
 				// LED 3
-				strip[6] = gLED;
-				strip[7] = rLED;
+				strip[6] = rLED;
+				strip[7] = gLED;
 				strip[8] = bLED;
 				writeLED();
 				thread_sleep_for( 100 );
@@ -196,22 +195,22 @@ int main()
 
 void updateOLED(){
 
-    
+    oled.cursor( 0, 0 );
     auto time = std::time(nullptr);
     char timeString[10];
     std::strftime(timeString, sizeof(timeString), "%T", std::localtime(&time));
 
-    printf("Time: %s, Color: %s, Distance: %f, Slide: %s\r\n", (char*) &timeString, color, distanceFromSensor, slideSide);
+    printf("Time: %s, Color: %s, Slide: %s\r\n", (char*) &timeString, color, slideSide);
 
     oled.clear();
     thread_sleep_for(30);
     oled.cursor(0, 0);
     thread_sleep_for(30);
-    oled.printf("Time:  %s\ncolor:     %2.2s\ndistance:     %2.2f\nslide:     %5s", (char*) &timeString, color, distanceFromSensor, slideSide);
+    oled.printf("Time:   %s\ncolor:  %s\nslide:  %s", (char*) &timeString, color, slideSide);
 }
 
 void updateHost(){
-    sprintf(message, "%s?key=%s&field1=%s&field2=%f&field3=%s", host, key, color, distanceFromSensor, slideSide);
+    sprintf(message, "%s?key=%s&field1=%s&field2=%s", host, key, color, slideSide);
     
     HttpRequest* request = new HttpRequest(network, HTTP_POST, message);
     HttpResponse* response = request->send();
