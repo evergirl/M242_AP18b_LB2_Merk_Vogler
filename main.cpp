@@ -8,9 +8,11 @@
 #include <ctime>
 #include "glibr.h"
 
+//set oleddisplay and spi
 OLEDDisplay oled( MBED_CONF_IOTKIT_OLED_RST, MBED_CONF_IOTKIT_OLED_SDA, MBED_CONF_IOTKIT_OLED_SCL );
 SPI spi( MBED_CONF_IOTKIT_LED_SPI_MOSI, NC, MBED_CONF_IOTKIT_LED_SPI_SCLK );
 
+//Variabeln initialisieren
 char host[] = "http://api.thingspeak.com/update";
 char key[] = "2UA773WW6HBQ3PZ5";
 unsigned int strip[9];
@@ -114,7 +116,7 @@ int main()
         thread_sleep_for(30);
         if ( GSensor.isGestureAvailable() )
          {
-            //oled.printf( "Gesture sensor " );
+            //set color for corresponding direction
             oled.cursor( 0, 0 );
             switch ( GSensor.readGesture() )
             {
@@ -170,7 +172,7 @@ int main()
             }
         }
         thread_sleep_for( 10 );
-		// Gruen, Rot, Blau - von Dunkel bis Hell
+		// Gruen, Rot, Blau
 		for ( int i = 0; i < 128; i+=32 )
 		{
 				// LED 1
@@ -193,8 +195,8 @@ int main()
     }
 }
 
+//Mehtode to rewrite the oled display
 void updateOLED(){
-
     oled.cursor( 0, 0 );
     auto time = std::time(nullptr);
     char timeString[10];
@@ -209,6 +211,7 @@ void updateOLED(){
     oled.printf("Time:   %s\ncolor:  %s\nslide:  %s", (char*) &timeString, color, slideSide);
 }
 
+//Mehtode to send data to thingspeak
 void updateHost(){
     sprintf(message, "%s?key=%s&field1=%s&field2=%s", host, key, color, slideSide);
     
